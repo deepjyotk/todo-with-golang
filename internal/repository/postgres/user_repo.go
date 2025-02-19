@@ -30,7 +30,7 @@ func (r *userRepository) CreateUser(user *models.User) error {
 
 // GetUserByEmail fetches a user by email.
 func (r *userRepository) GetUserByEmail(email string) (*models.User, error) {
-	var user models.User
+	var user models.User // Declare a varialbe to hold the result!
 	result := r.db.Where("email = ?", email).First(&user)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
