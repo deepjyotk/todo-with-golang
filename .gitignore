@@ -1,0 +1,75 @@
+# Binaries and Build Artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.o
+/gin-api
+/gin-api.exe
+
+# Logs and Runtime Files
+*.log
+*.out
+*.pid
+
+# Temporary Files
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# Go Build Directories (Avoid Committing Compiled Code)
+bin/
+pkg/
+
+# IDE/Editor Specific Files
+.idea/
+.vscode/
+*.iml
+
+# Docker and Kubernetes Configurations
+docker-compose.override.yml
+.dockerignore
+k8s/*.yaml
+helm/**/charts/
+helm/**/tmp/
+
+# Environment and Secrets
+.env
+.env.*
+config/*.json
+config/*.yml
+config/*.toml
+config/*.ini
+
+# Logs
+logs/
+trace.out
+cover.out
+
+# Test Cache and Coverage Files
+*.test
+
+# Static Analysis Tools
+golangci-lint.out
+govulncheck.out
+
+# Swagger API Docs
+docs/swagger/
+docs/api/*.json
+docs/api/*.yaml
+
+# Generated Files (Protobuf, Swagger, etc.)
+gen/
+*.pb.go
+*.pb.gw.go
+*.swagger.json
+*.swagger.yaml
+
+# JetBrains IDE
+*.iml
+.idea/
+
+# Exclude `vendor/` Only If Not Using `go mod vendor`
+vendor/
