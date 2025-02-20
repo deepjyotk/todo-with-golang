@@ -38,22 +38,27 @@ func SetupRouter(authHandler *handlers.AuthHandler, todoHandler *handlers.TodoHa
 			// Create a new Todo item
 			todoGroup.POST("", todoHandler.CreateTodo)
 			// Retrieve a single Todo item by its ID
-			todoGroup.GET("/:id", todoHandler.GetTodo)
+			todoGroup.GET("/:id", todoHandler.GetSpecificTodo)
 			// Update an existing Todo item
 			todoGroup.PUT("/:id", todoHandler.UpdateTodo)
 			// Delete a Todo item
 			todoGroup.DELETE("/:id", todoHandler.DeleteTodo)
+
 			// Add an attachment to a Todo item
 			// todoGroup.POST("/:id/attachments", todoHandler.AddAttachment) --> Future scope
 
 			// Generate a presigned URL route for S3 operations.
 			// @Router /api/v1/todos/presigned-url [get]
 			todoGroup.GET("/presigned-url", todoHandler.GeneratePresignedS3UrlPutRequest)
+
+			// api.GET("/users/:user_id/todos", middleware.AuthMiddleware(jwtSecret), todoHandler.GetTodos)
+			todoGroup.GET("/get-all", todoHandler.GetAllTodosForUser)
+
 		}
 
 		// Get all Todos for a user by user ID.
 		// This route is now authenticated by applying the middleware inline.
-		// api.GET("/users/:user_id/todos", middleware.AuthMiddleware(jwtSecret), todoHandler.GetTodos) --> Future scope
+
 	}
 
 	return router

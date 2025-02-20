@@ -27,7 +27,7 @@ type TodoService interface {
 	UpdateTodo(todo *models.Todo) error
 	DeleteItemWithItsAttachments(todo uint) error
 	AddAttachment(attachment *models.Attachment) error
-	GeneratePresignedS3UrlPutRequest(userID uint, fileName string) (string, error)
+	GeneratePresignedS3Url(userID uint, fileNameOrURL string, presignRequestType string) (string, error)
 }
 
 // todoService is the concrete implementation of TodoService.
@@ -78,9 +78,25 @@ func (s *todoService) GetTodoByIDAndUserID(id uint, userID uint) (*models.Todo, 
 
 // GetTodosByUser retrieves all Todo items for a specific user.
 func (s *todoService) GetTodosByUser(userID uint) ([]models.Todo, error) {
+	// Fetch all todo items from the repository
 	todos, err := s.repo.GetByUser(userID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Iterate over todos to generate presigned URLs for attachments
+	for i := range todos {
+		attachments := todos[i].Attachments
+
+		for j := range attachments {
+			presignedURL, err := s.GeneratePresignedS3Url(userID, attachments[j].AttachmentURL, "GET")
+			if err != nil {
+				// Log the error but continue processing other attachments
+				fmt.Printf("Failed to generate presigned URL for %s: %v\n", attachments[j].AttachmentURL, err)
+				continue
+			}
+			attachments[j].AttachmentURL = presignedURL
+		}
 	}
 	return todos, nil
 }
@@ -185,25 +201,41 @@ func (s *todoService) AddAttachment(attachment *models.Attachment) error {
 	return s.repo.CreateAttachment(attachment)
 }
 
-// GeneratePresignedS3UrlPutRequest generates an S3 presigned URL for the specified user and filename.
-// It constructs the S3 object key using the user ID as the folder name.
-func (s *todoService) GeneratePresignedS3UrlPutRequest(userID uint, fileName string) (string, error) {
-	// Construct the object key using the user ID as the folder name.
-	objectKey := strconv.Itoa(int(userID)) + "/" + fileName
+// GeneratePresignedS3Url generates a presigned S3 URL for either PUT (upload) or GET (download) operations.
+// The `presignRequestType` must be either "PUT" or "GET".
+func (s *todoService) GeneratePresignedS3Url(userID uint, fileNameOrURL string, presignRequestType string) (string, error) {
+	var objectKey string
 
-	// Prepare the PutObjectInput.
-	input := &s3.PutObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(objectKey),
+	if presignRequestType == "PUT" {
+		// For PUT, construct the object key using userID + fileName
+		objectKey = strconv.Itoa(int(userID)) + "/" + fileNameOrURL
+	} else if presignRequestType == "GET" {
+		// For GET, extract the object key from an existing URL
+		parsedURL, err := url.Parse(fileNameOrURL)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse attachment URL: %w", err)
+		}
+		objectKey = strings.TrimPrefix(parsedURL.Path, "/")
+	} else {
+		return "", fmt.Errorf("invalid presignRequestType: must be 'PUT' or 'GET'")
 	}
 
-	// Create a request for the PutObject operation.
-	req, _ := s.s3Client.PutObjectRequest(input)
-	// Generate a presigned URL with a 15-minute expiry.
-	urlStr, err := req.Presign(15 * time.Minute)
-	if err != nil {
-		return "", err
-	}
+	// Set the request expiry time
+	expiry := 15 * time.Minute
 
-	return urlStr, nil
+	if presignRequestType == "PUT" {
+		// Create presigned PUT request
+		req, _ := s.s3Client.PutObjectRequest(&s3.PutObjectInput{
+			Bucket: aws.String(s.bucket),
+			Key:    aws.String(objectKey),
+		})
+		return req.Presign(expiry)
+	} else {
+		// Create presigned GET request
+		req, _ := s.s3Client.GetObjectRequest(&s3.GetObjectInput{
+			Bucket: aws.String(s.bucket),
+			Key:    aws.String(objectKey),
+		})
+		return req.Presign(expiry)
+	}
 }

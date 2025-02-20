@@ -136,6 +136,44 @@
                 }
             }
         },
+        "/api/v1/todos/get-all": {
+            "get": {
+                "description": "Retrieve all Todo items associated with a user ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Retrieve all Todos for a user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Todo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/todos/presigned-url": {
             "get": {
                 "description": "Generate a presigned S3 URL unique to the authenticated user. The URL will allow the front-end to upload a file (attachment) directly to S3. The file will be stored in a folder named after the user ID.",

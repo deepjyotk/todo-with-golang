@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// TodoHandler handles HTTP requests related to todo items.
+// _TodoHandler handles HTTP requests related to todo items.
 type TodoHandler struct {
 	todoService services.TodoService
 	Validator   *validators.TodoValidator
@@ -102,7 +102,7 @@ func (h *TodoHandler) GeneratePresignedS3UrlPutRequest(c *gin.Context) {
 	}
 
 	// Generate the presigned URL using the service.
-	url, err := h.todoService.GeneratePresignedS3UrlPutRequest(userID, fileName)
+	url, err := h.todoService.GeneratePresignedS3Url(userID, fileName, "PUT")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate presigned URL"})
 		return
@@ -122,7 +122,7 @@ func (h *TodoHandler) GeneratePresignedS3UrlPutRequest(c *gin.Context) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /api/v1/todos/{id} [get]
-func (h *TodoHandler) GetTodo(c *gin.Context) {
+func (h *TodoHandler) GetSpecificTodo(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -230,26 +230,20 @@ func (h *TodoHandler) DeleteTodo(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-/*
-TODO: The below 2 functions are the future scope of the project, not gonna implement it now.
-
-
 // GetTodos godoc
 // @Summary Retrieve all Todos for a user
 // @Description Retrieve all Todo items associated with a user ID.
 // @Tags todo
 // @Accept json
 // @Produce json
-// @Param user_id path int true "User ID"
 // @Success 200 {array} models.Todo
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /api/v1/users/{user_id}/todos [get]
-func (h *TodoHandler) GetTodos(c *gin.Context) {
-	userParam := c.Param("user_id")
-	userID, err := strconv.Atoi(userParam)
+// @Router /api/v1/todos/get-all [get]
+func (h *TodoHandler) GetAllTodosForUser(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
@@ -260,6 +254,12 @@ func (h *TodoHandler) GetTodos(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, todos)
 }
+
+/*
+TODO: The below 2 functions are the future scope of the project, not gonna implement it now.
+
+
+
 
 // AddAttachment godoc
 // @Summary Add an Attachment to a Todo item

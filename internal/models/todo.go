@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Todo represents a TODO item belonging to a user.
+// _Todo represents a TODO item belonging to a user.
 // swagger:model Todo
 type Todo struct {
 	// The unique identifier of the todo item.

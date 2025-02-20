@@ -76,3 +76,6 @@ vendor/
 
 configs/
 *.yaml
+
+
+postgres_data/

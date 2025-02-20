@@ -2,11 +2,12 @@ package configs
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/viper"
 )
 
-// Config holds the application configuration.
+// Config holds the entire application configuration.
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
@@ -21,7 +22,12 @@ type ServerConfig struct {
 
 // DatabaseConfig holds the database configuration.
 type DatabaseConfig struct {
-	DSN string `mapstructure:"dsn"`
+	Host     string `mapstructure:"host"`
+	Port     string `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	Name     string `mapstructure:"name"`
+	DSN      string // Constructed manually later
 }
 
 // JWTConfig holds the JWT-specific configuration.
@@ -37,20 +43,59 @@ type S3Config struct {
 	SecretKey string `mapstructure:"secret_key"`
 }
 
-// LoadConfig loads configuration from the specified file path.
-func LoadConfig(path string) (*Config, error) {
-	viper.SetConfigFile(path)
-	// Optionally, you can set the config type explicitly:
-	// viper.SetConfigType("yaml")
+// LoadConfig loads configuration from a .env file (if present) and environment variables.
+func LoadConfig() (*Config, error) {
+	// Tell Viper the file we want to read is ".env"
+	viper.SetConfigFile(".env")
+	viper.SetConfigType("env")
+	// We also add the current directory as a config path to look for the .env file.
+	viper.AddConfigPath(".")
 
+	// Read in the config file. If it's not found, we skip it (not an error).
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error reading config file: %w", err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return nil, fmt.Errorf("error reading config file: %w", err)
+		}
 	}
+
+	// Enable reading from environment variables:
+	viper.AutomaticEnv()
+	// Replace dots with underscores so viper will look for e.g. SERVER_PORT
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	// --- Bind server config ---
+	_ = viper.BindEnv("server.port")
+
+	// --- Bind database config ---
+	_ = viper.BindEnv("database.host")
+	_ = viper.BindEnv("database.port")
+	_ = viper.BindEnv("database.user")
+	_ = viper.BindEnv("database.password")
+	_ = viper.BindEnv("database.name")
+
+	// --- Bind JWT ---
+	_ = viper.BindEnv("jwt.secret")
+
+	// --- Bind S3 ---
+	_ = viper.BindEnv("s3.bucket")
+	_ = viper.BindEnv("s3.region")
+	_ = viper.BindEnv("s3.access_key")
+	_ = viper.BindEnv("s3.secret_key")
 
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, fmt.Errorf("unable to decode config into struct: %w", err)
 	}
+
+	// Construct the DSN manually from the DB fields read above
+	config.Database.DSN = fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		config.Database.Host,
+		config.Database.Port,
+		config.Database.User,
+		config.Database.Password,
+		config.Database.Name,
+	)
 
 	return &config, nil
 }
