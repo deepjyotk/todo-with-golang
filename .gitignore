@@ -73,3 +73,6 @@ gen/
 
 # Exclude `vendor/` Only If Not Using `go mod vendor`
 vendor/
+
+configs/
+*.yaml

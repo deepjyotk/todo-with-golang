@@ -95,9 +95,275 @@
                     }
                 }
             }
+        },
+        "/api/v1/todos": {
+            "post": {
+                "description": "Create a new Todo item with optional attachments.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Create a new Todo item",
+                "parameters": [
+                    {
+                        "description": "Todo item",
+                        "name": "todo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateTodoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Todo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/todos/presigned-url": {
+            "get": {
+                "description": "Generate a presigned S3 URL unique to the authenticated user. The URL will allow the front-end to upload a file (attachment) directly to S3. The file will be stored in a folder named after the user ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Generate S3 presigned URL for file uploads",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filename for the attachment",
+                        "name": "filename",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "presigned URL",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/todos/{id}": {
+            "get": {
+                "description": "Retrieve a Todo item using its ID. But, the current userID should be accessible to view this TodoID(intersection-AND)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Retrieve a Todo item by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Todo ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Todo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing Todo item by ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Update a Todo item",
+                "parameters": [
+                    {
+                        "description": "Updated Todo item",
+                        "name": "todo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateTodoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Todo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a Todo item by ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todo"
+                ],
+                "summary": "Delete a Todo item",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Todo ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.CreateTodoRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "title"
+            ],
+            "properties": {
+                "attachment_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateTodoRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "id",
+                "title"
+            ],
+            "properties": {
+                "attachment_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -170,6 +436,67 @@
                 "username": {
                     "type": "string",
                     "example": "johndoe"
+                }
+            }
+        },
+        "models.Attachment": {
+            "type": "object",
+            "properties": {
+                "attachment_url": {
+                    "description": "AttachmentURL is the S3 URL where the attachment is stored.\nrequired: true\nexample: https://s3.amazonaws.com/yourbucket/attachment.jpg",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "CreatedAt timestamp",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique identifier of the attachment.\nexample: 1",
+                    "type": "integer"
+                },
+                "item_id": {
+                    "description": "ItemID is the foreign key referencing the parent todo item.\nrequired: true\nexample: 1",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt timestamp",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Todo": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "description": "Attachments holds the related attachments (images/PDFs).",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Attachment"
+                    }
+                },
+                "created_at": {
+                    "description": "CreatedAt timestamp",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description of the todo item.\nexample: Milk, eggs, bread, and coffee.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique identifier of the todo item.\nexample: 1",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "Title of the todo item.\nrequired: true\nexample: Buy groceries",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt timestamp",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "UserID is the foreign key referencing the owner user.\nrequired: true\nexample: 42",
+                    "type": "integer"
                 }
             }
         }

@@ -1,4 +1,35 @@
 definitions:
+  dto.CreateTodoRequest:
+    properties:
+      attachment_urls:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  dto.UpdateTodoRequest:
+    properties:
+      attachment_urls:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    required:
+    - description
+    - id
+    - title
+    type: object
   handlers.ErrorResponse:
     properties:
       message:
@@ -51,6 +82,68 @@ definitions:
       username:
         example: johndoe
         type: string
+    type: object
+  models.Attachment:
+    properties:
+      attachment_url:
+        description: |-
+          AttachmentURL is the S3 URL where the attachment is stored.
+          required: true
+          example: https://s3.amazonaws.com/yourbucket/attachment.jpg
+        type: string
+      created_at:
+        description: CreatedAt timestamp
+        type: string
+      id:
+        description: |-
+          The unique identifier of the attachment.
+          example: 1
+        type: integer
+      item_id:
+        description: |-
+          ItemID is the foreign key referencing the parent todo item.
+          required: true
+          example: 1
+        type: integer
+      updated_at:
+        description: UpdatedAt timestamp
+        type: string
+    type: object
+  models.Todo:
+    properties:
+      attachments:
+        description: Attachments holds the related attachments (images/PDFs).
+        items:
+          $ref: '#/definitions/models.Attachment'
+        type: array
+      created_at:
+        description: CreatedAt timestamp
+        type: string
+      description:
+        description: |-
+          Description of the todo item.
+          example: Milk, eggs, bread, and coffee.
+        type: string
+      id:
+        description: |-
+          The unique identifier of the todo item.
+          example: 1
+        type: integer
+      title:
+        description: |-
+          Title of the todo item.
+          required: true
+          example: Buy groceries
+        type: string
+      updated_at:
+        description: UpdatedAt timestamp
+        type: string
+      user_id:
+        description: |-
+          UserID is the foreign key referencing the owner user.
+          required: true
+          example: 42
+        type: integer
     type: object
 info:
   contact: {}
@@ -115,4 +208,152 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /api/v1/todos:
+    post:
+      consumes:
+      - application/json
+      description: Create a new Todo item with optional attachments.
+      parameters:
+      - description: Todo item
+        in: body
+        name: todo
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTodoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create a new Todo item
+      tags:
+      - todo
+  /api/v1/todos/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Todo item by ID.
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Delete a Todo item
+      tags:
+      - todo
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a Todo item using its ID. But, the current userID should
+        be accessible to view this TodoID(intersection-AND)
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Retrieve a Todo item by ID
+      tags:
+      - todo
+    put:
+      consumes:
+      - application/json
+      description: Update an existing Todo item by ID.
+      parameters:
+      - description: Updated Todo item
+        in: body
+        name: todo
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTodoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Update a Todo item
+      tags:
+      - todo
+  /api/v1/todos/presigned-url:
+    get:
+      consumes:
+      - application/json
+      description: Generate a presigned S3 URL unique to the authenticated user. The
+        URL will allow the front-end to upload a file (attachment) directly to S3.
+        The file will be stored in a folder named after the user ID.
+      parameters:
+      - description: Filename for the attachment
+        in: query
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: presigned URL
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Generate S3 presigned URL for file uploads
+      tags:
+      - todo
 swagger: "2.0"

@@ -65,11 +65,24 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Create the user.
 	user, err := h.authService.Register(req.Username, req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Message: err.Error()})
 		return
 	}
+
+	// Generate a JWT token for the new user.
+	token, err := h.authService.GenerateToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	// Store the token in an HTTP-only cookie (valid for 24 hours).
+	c.SetCookie("jwt", token, 3600*24, "/", "", false, true)
+
+	// Respond with the created user details.
 	c.JSON(http.StatusCreated, RegisterResponse{
 		ID:       user.ID,
 		Username: user.Username,
@@ -95,12 +108,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Authenticate the user and generate a JWT token.
 	token, err := h.authService.Login(req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Message: err.Error()})
 		return
 	}
-	// Set the JWT token in an HTTP-only cookie (valid for 24 hours)
+
+	// Set the JWT token in an HTTP-only cookie (valid for 24 hours).
 	c.SetCookie("jwt", token, 3600*24, "/", "", false, true)
 	c.JSON(http.StatusOK, LoginResponse{Message: "login successful"})
 }

@@ -1,3 +1,4 @@
+// cmd/server/main.go
 package main
 
 import (
@@ -9,54 +10,52 @@ import (
 	"github.com/deepjyotk/todo-with-golang/internal/repository/postgres"
 	"github.com/deepjyotk/todo-with-golang/internal/routes"
 	"github.com/deepjyotk/todo-with-golang/internal/services"
+	"github.com/deepjyotk/todo-with-golang/internal/validators"
 	pgdriver "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	_ "github.com/deepjyotk/todo-with-golang/docs"
+	_ "github.com/deepjyotk/todo-with-golang/docs" // Swagger docs import
 )
 
-// Import docs for Swagger
-
-// main is the entry point of the application. It performs the following steps:
-// 1. Loads the application configuration from a YAML file.
-// 2. Initializes a connection to the PostgreSQL database using the DSN from the configuration.
-// 3. Automatically migrates the User model schema in the database.
-// 4. Instantiates the user repository and authentication service with the JWT secret.
-// 5. Sets up HTTP handlers for authentication routes.
-// 6. Configures and starts the HTTP server using the specified port from the configuration.
-
 func main() {
-	// Load configuration (ensure configs/config.yaml exists and is correct)
+	// Load configuration
 	cfg, err := configs.LoadConfig("configs/config.yaml")
 	if err != nil {
 		log.Fatal("Failed to load config:", err)
 	}
 
-	// Initialize database connection using DSN from config
+	// Initialize database connection
 	db, err := gorm.Open(pgdriver.Open(cfg.Database.DSN), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Auto-migrate the User model
-	err = db.AutoMigrate(&models.User{})
+	// Auto-migrate the models: User, Todo, and Attachment
+	err = db.AutoMigrate(&models.User{}, &models.Todo{}, &models.Attachment{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
 	// Initialize repositories
 	userRepo := postgres.NewUserRepository(db)
+	todoRepo := postgres.NewTodoRepository(db)
 
-	// Initialize services with JWT secret from configuration
+	// Initialize services
 	authService := services.NewAuthService(userRepo, []byte(cfg.JWT.Secret))
+	todoService := services.NewTodoService(todoRepo, cfg.S3)
 
-	// Initialize HTTP handlers
+	// Create validator with injected configuration
+	todoValidator := validators.NewTodoValidator(cfg)
+
+	// Now, when initializing your handlers, pass the validator if needed.
+	// For example, if the TodoHandler requires validation:
+	todoHandler := handlers.NewTodoHandler(todoService, todoValidator)
 	authHandler := handlers.NewAuthHandler(authService)
 
-	// Setup routes
-	router := routes.SetupRouter(authHandler)
+	// Setup routes with dependency injection of both handlers
+	router := routes.SetupRouter(authHandler, todoHandler, cfg.JWT.Secret)
 
-	// Start the server (port from config)
+	// Start the server on the specified port
 	err = router.Run(":" + cfg.Server.Port)
 	if err != nil {
 		log.Fatal("Failed to run server:", err)

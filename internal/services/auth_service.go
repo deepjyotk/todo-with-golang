@@ -14,6 +14,7 @@ import (
 type AuthService interface {
 	Register(username, email, password string) (*models.User, error)
 	Login(email, password string) (string, error)
+	GenerateToken(user *models.User) (string, error)
 }
 
 type authService struct {
@@ -38,7 +39,7 @@ func (s *authService) Register(username, email, password string) (*models.User, 
 	if existingUser != nil {
 		return nil, errors.New("user already exists")
 	}
-	// Hash the password with bcrypt
+	// Hash the password with bcrypt.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -57,6 +58,16 @@ func (s *authService) Register(username, email, password string) (*models.User, 
 	return user, nil
 }
 
+// GenerateToken creates a JWT token for the given user.
+func (s *authService) GenerateToken(user *models.User) (string, error) {
+	// Create a JWT token with claims.
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(), // Token valid for 24 hours.
+	})
+	return token.SignedString(s.jwtSecret)
+}
+
 // Login verifies user credentials and returns a JWT token string.
 func (s *authService) Login(email, password string) (string, error) {
 	user, err := s.userRepo.GetUserByEmail(email)
@@ -66,21 +77,11 @@ func (s *authService) Login(email, password string) (string, error) {
 	if user == nil {
 		return "", errors.New("invalid email or password")
 	}
-	// Compare the hashed password with the provided one
+	// Compare the hashed password with the provided one.
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		return "", errors.New("invalid email or password")
 	}
-
-	// Create JWT token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(), // Token valid for 24 hours
-	})
-
-	tokenString, err := token.SignedString(s.jwtSecret)
-	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
+	// Use the modular GenerateToken method.
+	return s.GenerateToken(user)
 }
