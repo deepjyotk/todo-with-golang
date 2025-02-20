@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"./internal/dto"
+	"github.com/deepjyotk/todo-with-golang/internal/dto"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
