@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+data:
+  init.sql: |
+    -- Place your initialization SQL commands here.
+    -- For example:
+    CREATE DATABASE tododb;

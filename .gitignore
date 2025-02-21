@@ -75,9 +75,10 @@ gen/
 vendor/
 
 configs/
-*.yaml
+    *.yaml
 
+
+secret.yaml
 
 data/
 
-local/

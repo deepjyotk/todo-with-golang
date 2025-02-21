@@ -29,7 +29,7 @@ WORKDIR /app
 # Copy the built binary from the builder stage
 COPY --from=builder /app/server .
 
-COPY deployments/docker/.env /app/.env
+COPY deployments/docker/.env.docker /app/.env
 
 
 # Expose the application port (adjust if your app listens on a different port)

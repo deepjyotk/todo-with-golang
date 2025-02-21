@@ -110,6 +110,8 @@ func (s *todoService) UpdateTodo(todo *models.Todo) error {
 		return errors.New("todo item not found")
 	}
 
+	//!Assumption made: frontend will upload the attachments and only then it will call updateTodo!!
+
 	// --- Additional safety check about attachments can go here if needed ---
 	// For instance: Validate that 'todo.AttachmentURL' has indeed been uploaded
 
