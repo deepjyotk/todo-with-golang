@@ -5,7 +5,8 @@ import (
 	"log"
 
 	"github.com/deepjyotk/todo-with-golang/configs"
-	"github.com/deepjyotk/todo-with-golang/internal/handlers"
+	"github.com/deepjyotk/todo-with-golang/internal/handlers/auth_handler"
+	"github.com/deepjyotk/todo-with-golang/internal/handlers/todo_handler"
 	"github.com/deepjyotk/todo-with-golang/internal/models"
 	"github.com/deepjyotk/todo-with-golang/internal/repository/postgres"
 	"github.com/deepjyotk/todo-with-golang/internal/routes"
@@ -57,8 +58,8 @@ func main() {
 	todoValidator := validators.NewTodoValidator(cfg)
 
 	// Initialize handlers
-	todoHandler := handlers.NewTodoHandler(todoService, todoValidator)
-	authHandler := handlers.NewAuthHandler(authService)
+	todoHandler := todo_handler.NewTodoHandler(todoService, todoValidator, authService)
+	authHandler := auth_handler.NewAuthHandler(authService)
 
 	// Set up routes
 	router := routes.SetupRouter(authHandler, todoHandler, cfg.JWT.Secret)

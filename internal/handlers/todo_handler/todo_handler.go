@@ -1,5 +1,4 @@
-// internal/handlers/todo_handler.go
-package handlers
+package todo_handler
 
 import (
 	"net/http"
@@ -7,9 +6,7 @@ import (
 
 	"github.com/deepjyotk/todo-with-golang/internal/dto"
 	"github.com/deepjyotk/todo-with-golang/internal/mapper"
-
 	"github.com/deepjyotk/todo-with-golang/internal/services"
-	"github.com/deepjyotk/todo-with-golang/internal/utils"
 	"github.com/deepjyotk/todo-with-golang/internal/validators"
 	"github.com/gin-gonic/gin"
 )
@@ -17,12 +14,13 @@ import (
 // _TodoHandler handles HTTP requests related to todo items.
 type TodoHandler struct {
 	todoService services.TodoService
-	Validator   *validators.TodoValidator
+	Validator   validators.TodoValidatorInterface
+	authService services.AuthService
 }
 
 // NewTodoHandler creates a new TodoHandler.
-func NewTodoHandler(todoService services.TodoService, validator *validators.TodoValidator) *TodoHandler {
-	return &TodoHandler{todoService: todoService, Validator: validator}
+func NewTodoHandler(todoService services.TodoService, validator validators.TodoValidatorInterface, authService services.AuthService) *TodoHandler {
+	return &TodoHandler{todoService: todoService, Validator: validator, authService: authService}
 }
 
 // CreateTodo godoc
@@ -45,7 +43,7 @@ func (h *TodoHandler) CreateTodo(c *gin.Context) {
 	}
 
 	// Retrieve the user ID from the context.
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := h.authService.GetUserIDFromContext(c)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -83,7 +81,7 @@ func (h *TodoHandler) CreateTodo(c *gin.Context) {
 // @Router /api/v1/todos/presigned-url [get]
 func (h *TodoHandler) GeneratePresignedS3UrlPutRequest(c *gin.Context) {
 	// Retrieve the authenticated user ID.
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := h.authService.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -131,7 +129,7 @@ func (h *TodoHandler) GetSpecificTodo(c *gin.Context) {
 	}
 
 	// Retrieve the authenticated user ID.
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := h.authService.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -166,7 +164,7 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 	}
 
 	// Retrieve the user ID from the context.
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := h.authService.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -205,7 +203,7 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 // @Failure 404 {object} ErrorResponse
 // @Router /api/v1/todos/{id} [delete]
 func (h *TodoHandler) DeleteTodo(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := h.authService.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -241,7 +239,7 @@ func (h *TodoHandler) DeleteTodo(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/todos/get-all [get]
 func (h *TodoHandler) GetAllTodosForUser(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := h.authService.GetUserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -257,9 +255,6 @@ func (h *TodoHandler) GetAllTodosForUser(c *gin.Context) {
 
 /*
 TODO: The below 2 functions are the future scope of the project, not gonna implement it now.
-
-
-
 
 // AddAttachment godoc
 // @Summary Add an Attachment to a Todo item
@@ -293,5 +288,4 @@ func (h *TodoHandler) AddAttachment(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, attachment)
 }
-
 */

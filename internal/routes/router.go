@@ -2,8 +2,12 @@
 package routes
 
 import (
+	"net/http"
+
 	_ "github.com/deepjyotk/todo-with-golang/docs" // Import the generated Swagger docs
-	"github.com/deepjyotk/todo-with-golang/internal/handlers"
+
+	"github.com/deepjyotk/todo-with-golang/internal/handlers/auth_handler"
+	"github.com/deepjyotk/todo-with-golang/internal/handlers/todo_handler"
 	"github.com/deepjyotk/todo-with-golang/internal/middleware"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -12,8 +16,13 @@ import (
 
 // SetupRouter initializes the Gin engine, middleware, and routes.
 // It now accepts jwtSecret as an argument for use in protected routes.
-func SetupRouter(authHandler *handlers.AuthHandler, todoHandler *handlers.TodoHandler, jwtSecret string) *gin.Engine {
+func SetupRouter(authHandler *auth_handler.AuthHandler, todoHandler *todo_handler.TodoHandler, jwtSecret string) *gin.Engine {
 	router := gin.Default()
+
+	// Health check endpoint (not grouped under any version or auth)
+	router.GET("/health", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
 
 	// Swagger documentation route (publicly accessible)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

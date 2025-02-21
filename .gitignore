@@ -78,4 +78,6 @@ configs/
 *.yaml
 
 
-postgres_data/
+data/
+
+local/
