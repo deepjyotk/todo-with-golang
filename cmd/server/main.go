@@ -10,7 +10,9 @@ import (
 	"github.com/deepjyotk/todo-with-golang/internal/models"
 	"github.com/deepjyotk/todo-with-golang/internal/repository/postgres"
 	"github.com/deepjyotk/todo-with-golang/internal/routes"
-	"github.com/deepjyotk/todo-with-golang/internal/services"
+	"github.com/deepjyotk/todo-with-golang/internal/services/auth_service"
+	"github.com/deepjyotk/todo-with-golang/internal/services/todo_service"
+
 	"github.com/deepjyotk/todo-with-golang/internal/validators"
 	"github.com/joho/godotenv"
 	pgdriver "gorm.io/driver/postgres"
@@ -51,8 +53,8 @@ func main() {
 	todoRepo := postgres.NewTodoRepository(db)
 
 	// Initialize services
-	authService := services.NewAuthService(userRepo, []byte(cfg.JWT.Secret))
-	todoService := services.NewTodoService(todoRepo, cfg.S3)
+	authService := auth_service.NewAuthService(userRepo, []byte(cfg.JWT.Secret))
+	todoService := todo_service.NewTodoService(todoRepo, cfg.S3)
 
 	// Validator (optional, if you have S3 constraints or other needs)
 	todoValidator := validators.NewTodoValidator(cfg)

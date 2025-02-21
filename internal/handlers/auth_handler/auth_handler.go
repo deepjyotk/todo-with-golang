@@ -3,17 +3,17 @@ package auth_handler
 import (
 	"net/http"
 
-	"github.com/deepjyotk/todo-with-golang/internal/services"
+	"github.com/deepjyotk/todo-with-golang/internal/services/auth_service"
 	"github.com/gin-gonic/gin"
 )
 
 // AuthHandler handles user authentication endpoints.
 type AuthHandler struct {
-	authService services.AuthService
+	authService auth_service.AuthService
 }
 
 // NewAuthHandler returns a new instance of AuthHandler.
-func NewAuthHandler(authService services.AuthService) *AuthHandler {
+func NewAuthHandler(authService auth_service.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 

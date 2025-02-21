@@ -6,20 +6,22 @@ import (
 
 	"github.com/deepjyotk/todo-with-golang/internal/dto"
 	"github.com/deepjyotk/todo-with-golang/internal/mapper"
-	"github.com/deepjyotk/todo-with-golang/internal/services"
+
+	"github.com/deepjyotk/todo-with-golang/internal/services/auth_service"
+	"github.com/deepjyotk/todo-with-golang/internal/services/todo_service"
 	"github.com/deepjyotk/todo-with-golang/internal/validators"
 	"github.com/gin-gonic/gin"
 )
 
 // _TodoHandler handles HTTP requests related to todo items.
 type TodoHandler struct {
-	todoService services.TodoService
+	todoService todo_service.TodoService
 	Validator   validators.TodoValidatorInterface
-	authService services.AuthService
+	authService auth_service.AuthService
 }
 
 // NewTodoHandler creates a new TodoHandler.
-func NewTodoHandler(todoService services.TodoService, validator validators.TodoValidatorInterface, authService services.AuthService) *TodoHandler {
+func NewTodoHandler(todoService todo_service.TodoService, validator validators.TodoValidatorInterface, authService auth_service.AuthService) *TodoHandler {
 	return &TodoHandler{todoService: todoService, Validator: validator, authService: authService}
 }
 
@@ -254,7 +256,7 @@ func (h *TodoHandler) GetAllTodosForUser(c *gin.Context) {
 }
 
 /*
-TODO: The below 2 functions are the future scope of the project, not gonna implement it now.
+TODO: The below  function are the future scope of the project, not gonna implement it now.
 
 // AddAttachment godoc
 // @Summary Add an Attachment to a Todo item
