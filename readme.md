@@ -81,6 +81,14 @@ This is a TODO application built using Golang and the GIN framework. The project
 - **Stabilization Window**: A 300-second delay prevents rapid fluctuations.
 
 
+## HLD
+
+### Create/Update Item HLD
+<img width="755" alt="image" src="https://github.com/user-attachments/assets/958bc7d8-7853-433e-9223-86d7d7e926b2" />
+
+### Get Item HLD
+<img width="731" alt="image" src="https://github.com/user-attachments/assets/a256fd9f-ad50-4f76-88e1-42a6a19f78d0" />
+
 ## 🌐 API Endpoints
 
 ### Health Check
