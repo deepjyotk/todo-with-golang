@@ -1,13 +1,7 @@
 # TODO App - (Golang + GIN)
 
 ## Overview
-This is a TODO application built using Golang and the GIN framework. The project follows best practices for clean architecture, API design, and automated testing. More details will be added as development progresses.
-
-
----
-
-
-Todo App is a Go-based application that provides an API for managing todo items with attachment support. The application is containerized and supports deployment via Docker and Kubernetes.
+This is a TODO application built using Golang and the GIN framework. The project follows best practices for clean architecture, API design, and automated testing. The application is containerized and supports deployment via Docker and Kubernetes.
 
 ## 📌 Features
 - CRUD operations for todo items
